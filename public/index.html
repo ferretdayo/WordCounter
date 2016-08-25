@@ -1,0 +1,87 @@
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>よしなにカウンター</title>
+		<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+		
+		<!-- Compiled and minified CSS -->
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/css/materialize.min.css">
+		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+		<!-- Compiled and minified JavaScript -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/js/materialize.min.js"></script>
+
+		<script>
+			var recognition = new webkitSpeechRecognition();
+			console.log(recognition);
+			recognition.lang = "ja-JP";
+			recognition.continuous = true;
+			//話し声の認識中
+			recognition.onsoundstart = function(){
+				$("#state").text("認識中");
+			};
+			//マッチする認識が無い
+			recognition.onnomatch = function(){
+				$("#recognizedText").text("もう一度試してください");
+			};
+			//エラー
+			recognition.onerror = function(){
+				$("#recognizedText").text("エラー");
+			};
+			//話し声の認識終了
+			recognition.onsoundend = function(){
+				$("#state").text("停止中");
+			};
+			var count = 0;
+			var pre_word = "よしなに";
+			//認識が終了したときのイベント
+			recognition.onresult = function(event){
+				var results = event.results;
+				//前のワードと同じであればcountをリセット
+				if(pre_word !== $('.yoshina').val()){
+					count = 0;
+				}
+				console.log($('.yoshina').val());
+				for (var i = event.resultIndex; i<results.length; i++){
+					$("#recognizedText").text(results[i][0].transcript);
+					count += results[i][0].transcript.split($('.yoshina').val()).length-1;
+					//入力された文字と同じ言葉が発言に含まれた場合はインクリメント
+					if(results[i][0].transcript.indexOf($('.yoshina').val()) != -1){
+						Materialize.toast($('.yoshina').val() + " : " + count + "回", 4000);
+						$('#count').html("<span style='color:red;font-size:45px;'>" + count + "</span>回");
+					}
+				}
+			};
+			// 録音開始
+			function record(){
+				recognition.start();
+			}
+			// 録音終了
+			function record_stop(){
+				recognition.stop();
+			}
+		</script>
+		<style>
+			html {
+				font-family: GillSans, Calibri, Trebuchet, sans-serif;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<h1>よしなにカウンター</h1>
+			<label for="word">カウントする単語</label>
+			<input type="text" id="word" value="よしなに" class="yoshina">
+			<button class="waves-effect waves-light btn-large" onclick="record()">音声認識開始<i class="material-icons">settings_voice</i></button>
+			<button class="waves-effect waves-light btn-large" onclick="record_stop()">音声認識終了<i class="material-icons">mic_off</i></button>
+			<div id="state" style="margin:10px 0;font-size:20px;display:inline">停止中</div>
+			<div style="margin:20px 0">
+				<label for="count">カウント数</label>
+				<div id="count" style="margin:10px 0;font-size:30px;"><span style="color:red;font-size:45px">0</span>回</div>
+			</div>
+			<div style="margin:20px 0">
+				<label for="recognizedText">入力された音声</label>
+				<div id="recognizedText" style="margin:10px 0;font-size:30px;">null</div>
+			</div>
+		</div>
+	</body>
+</html>
